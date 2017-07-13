@@ -1,7 +1,6 @@
 "use strict";
 
 var _ = require("lodash");
-var pkg = require("../package.json");
 var Client = require("./client");
 var ClientManager = require("./clientManager");
 var express = require("express");
@@ -15,6 +14,7 @@ var ldap = require("ldapjs");
 var colors = require("colors/safe");
 const net = require("net");
 const Identification = require("./identification");
+const changelog = require("./plugins/changelog");
 
 var manager = null;
 
@@ -137,11 +137,7 @@ function index(req, res, next) {
 		return next();
 	}
 
-	var data = _.merge(
-		pkg,
-		Helper.config
-	);
-	data.gitCommit = Helper.getGitCommit();
+	const data = _.cloneDeep(Helper.config);
 	data.themes = fs.readdirSync("client/themes/").filter(function(themeFile) {
 		return themeFile.endsWith(".css");
 	}).map(function(css) {
@@ -292,6 +288,12 @@ function init(socket, client, generateToken) {
 			if (preview) {
 				preview.shown = data.shown;
 			}
+		});
+
+		socket.on("changelog", function() {
+			changelog.sendChangelog((data) => {
+				socket.emit("changelog", data);
+			});
 		});
 
 		socket.on("sign-out", (token) => {
