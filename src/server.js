@@ -290,11 +290,13 @@ function init(socket, client, generateToken) {
 			}
 		});
 
-		socket.on("changelog", function() {
-			changelog.sendChangelog((data) => {
-				socket.emit("changelog", data);
+		if (!Helper.config.public) {
+			socket.on("changelog", function() {
+				changelog.sendChangelog((data) => {
+					socket.emit("changelog", data);
+				});
 			});
-		});
+		}
 
 		socket.on("sign-out", (token) => {
 			delete client.config.sessions[token];
