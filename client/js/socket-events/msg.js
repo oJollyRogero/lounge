@@ -7,9 +7,19 @@ const chat = $("#chat");
 const templates = require("../../views");
 
 socket.on("msg", function(data) {
+	let target = data.chan;
+	let channel = chat.find("#chan-" + target);
+
+	// Display received notices and errors in currently active channel,
+	// if the actual target is the network lobby.
+	// Reloading the page will put them back into the lobby window.
+	if (data.msg.showInActive) {
+		data.chan = chat.find(".active").data("id");
+		target = data.chan;
+		channel = chat.find("#chan-" + target);
+	}
+
 	const msg = render.buildChatMessage(data);
-	const target = data.chan;
-	const channel = chat.find("#chan-" + target);
 	const container = channel.find(".messages");
 
 	const activeChannelId = chat.find(".chan.active").data("id");
@@ -62,5 +72,16 @@ socket.on("msg", function(data) {
 				$(this).remove();
 			}
 		});
+	}
+
+	if ((data.msg.type === "message" || data.msg.type === "action") && channel.hasClass("channel")) {
+		const nicks = channel.find(".users").data("nicks");
+		if (nicks) {
+			const find = nicks.indexOf(data.msg.from);
+			if (find !== -1) {
+				nicks.splice(find, 1);
+				nicks.unshift(data.msg.from);
+			}
+		}
 	}
 });

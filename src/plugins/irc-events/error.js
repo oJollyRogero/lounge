@@ -14,6 +14,7 @@ module.exports = function(irc, network) {
 		var msg = new Msg({
 			type: Msg.Type.ERROR,
 			text: text,
+			showInActive: true,
 		});
 		lobby.pushMessage(client, msg, true);
 	});
@@ -23,6 +24,7 @@ module.exports = function(irc, network) {
 		var msg = new Msg({
 			type: Msg.Type.ERROR,
 			text: data.nick + ": " + (data.reason || "Nickname is already in use."),
+			showInActive: true,
 		});
 		lobby.pushMessage(client, msg, true);
 
@@ -42,6 +44,7 @@ module.exports = function(irc, network) {
 		var msg = new Msg({
 			type: Msg.Type.ERROR,
 			text: data.nick + ": " + (data.reason || "Nickname is invalid."),
+			showInActive: true,
 		});
 		lobby.pushMessage(client, msg, true);
 

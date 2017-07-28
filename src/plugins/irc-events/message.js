@@ -36,8 +36,15 @@ module.exports = function(irc, network) {
 
 	function handleMessage(data) {
 		let chan;
-		let highlight = false;
-		const self = data.nick === irc.user.nick;
+
+		const msg = new Msg({
+			type: data.type,
+			time: data.time,
+			from: data.nick,
+			text: data.message,
+			self: data.nick === irc.user.nick,
+			highlight: false
+		});
 
 		// Server messages go to server window, no questions asked
 		if (data.from_server) {
@@ -54,6 +61,7 @@ module.exports = function(irc, network) {
 			if (typeof chan === "undefined") {
 				// Send notices that are not targeted at us into the server window
 				if (data.type === Msg.Type.NOTICE) {
+					msg.showInActive = true;
 					chan = network.channels[0];
 				} else {
 					chan = new Chan({
@@ -70,7 +78,7 @@ module.exports = function(irc, network) {
 
 			// Query messages (unless self) always highlight
 			if (chan.type === Chan.Type.QUERY) {
-				highlight = !self;
+				msg.highlight = !msg.self;
 			} else if (chan.type === Chan.Type.CHANNEL) {
 				const user = chan.findUser(data.nick);
 
@@ -80,27 +88,19 @@ module.exports = function(irc, network) {
 			}
 		}
 
+		msg.mode = chan.getMode(data.nick);
+
 		// Self messages in channels are never highlighted
 		// Non-self messages are highlighted as soon as the nick is detected
-		if (!highlight && !self) {
-			highlight = network.highlightRegex.test(data.message);
+		if (!msg.highlight && !msg.self) {
+			msg.highlight = network.highlightRegex.test(data.message);
 		}
-
-		var msg = new Msg({
-			type: data.type,
-			time: data.time,
-			mode: chan.getMode(data.nick),
-			from: data.nick,
-			text: data.message,
-			self: self,
-			highlight: highlight
-		});
 
 		// No prefetch URLs unless are simple MESSAGE or ACTION types
 		if ([Msg.Type.MESSAGE, Msg.Type.ACTION].indexOf(data.type) !== -1) {
 			LinkPrefetch(client, chan, msg);
 		}
 
-		chan.pushMessage(client, msg, !self);
+		chan.pushMessage(client, msg, !msg.self);
 	}
 };

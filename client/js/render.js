@@ -31,12 +31,6 @@ function buildChannelMessages(channel, messages) {
 
 function buildChatMessage(data) {
 	const type = data.msg.type;
-	let target = "#chan-" + data.chan;
-	if (type === "error") {
-		target = "#chan-" + chat.find(".active").data("id");
-	}
-
-	const chan = chat.find(target);
 	let template = "msg";
 
 	if (!data.msg.highlight && !data.msg.self && (type === "message" || type === "notice") && options.highlights.some(function(h) {
@@ -76,17 +70,6 @@ function buildChatMessage(data) {
 	data.msg.previews.forEach((preview) => {
 		renderPreview(preview, msg);
 	});
-
-	if ((type === "message" || type === "action" || type === "notice") && chan.hasClass("channel")) {
-		const nicks = chan.find(".users").data("nicks");
-		if (nicks) {
-			const find = nicks.indexOf(data.msg.from);
-			if (find !== -1) {
-				nicks.splice(find, 1);
-				nicks.unshift(data.msg.from);
-			}
-		}
-	}
 
 	return msg;
 }
